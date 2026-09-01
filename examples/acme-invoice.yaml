@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../schema/invoice.schema.yaml
 invoice:
   number: 1042
   date: 2026-03-15
