@@ -235,9 +235,7 @@ cargo fmt --check
 
 ## Versioning and releases
 
-Version numbers follow [Semantic Versioning](https://semver.org/). The canonical version is set in `Cargo.toml`; release notes live in [`CHANGELOG.md`](CHANGELOG.md).
-
-To cut a release, follow [`RELEASING.md`](RELEASING.md): bump the version, update the changelog, tag `vX.Y.Z`, and push. GitHub Actions builds release binaries and publishes a GitHub Release automatically.
+Version numbers follow [Semantic Versioning](https://semver.org/) and are cut with [semantic-release](https://semantic-release.org/) from [Conventional Commits](https://www.conventionalcommits.org/) on `main`. Manual `vX.Y.Z` tags still work. See [`RELEASING.md`](RELEASING.md).
 
 ## License
 

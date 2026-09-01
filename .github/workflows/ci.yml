@@ -41,5 +41,8 @@ jobs:
         run: |
           test -f CHANGELOG.md
           test -f RELEASING.md
+          test -f .releaserc.json
+          test -f package.json
+          test -f scripts/prepare-release.py
           grep -q '^version = ' Cargo.toml
           cargo metadata --format-version 1 --no-deps | jq -e '.packages[] | select(.name=="invoicemd-cli") | .version'

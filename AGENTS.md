@@ -21,7 +21,7 @@ Tools on `PATH`: `rustc`, `cargo`, `rustfmt`, `clippy` at `/usr/local/cargo/bin`
 - Test: `cargo test`
 - Lint: `cargo clippy -- -D warnings`
 - Format check: `cargo fmt --check`
-- Release process: see `RELEASING.md` at repo root (tag `vX.Y.Z` triggers `.github/workflows/release.yml`)
+- Release process: see `RELEASING.md`. Automatic releases use semantic-release on `main`; `vX.Y.Z` tags still publish binaries via `.github/workflows/release.yml`.
 
 Example end-to-end:
 

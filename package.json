@@ -1,0 +1,15 @@
+{
+  "name": "invoicemd-cli-release-tooling",
+  "private": true,
+  "description": "semantic-release tooling for invoicemd-cli; not published to npm",
+  "engines": {
+    "node": ">=20.8.1"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
+    "semantic-release": "^25.0.0"
+  }
+}
