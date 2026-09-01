@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Invoice #{{ invoice.number }} — {{ company.name }}</title>
   <style>
     :root {
@@ -20,7 +20,7 @@
     body {
       margin: 0;
       padding: 2rem;
-      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      font-family: Helvetica, sans-serif;
       color: var(--ink);
       background: var(--bg);
       line-height: 1.5;
@@ -142,7 +142,7 @@
     <header>
       <div>
         <h1>{{ company.name }}</h1>
-        <div class="meta">{{ company.address | replace(from="\n", to="<br>") | safe }}</div>
+        <div class="meta">{{ company.address | replace(from="\n", to="<br />") | safe }}</div>
         {% if company.email %}<div class="meta">{{ company.email }}</div>{% endif %}
         {% if company.phone %}<div class="meta">{{ company.phone }}</div>{% endif %}
       </div>
@@ -158,14 +158,14 @@
       <div class="party">
         <h2>Bill To</h2>
         <strong>{{ client.name }}</strong>
-        <div>{{ client.address | replace(from="\n", to="<br>") | safe }}</div>
+        <div>{{ client.address | replace(from="\n", to="<br />") | safe }}</div>
         {% if client.email %}<div>{{ client.email }}</div>{% endif %}
         {% if client.phone %}<div>{{ client.phone }}</div>{% endif %}
       </div>
       <div class="party">
         <h2>From</h2>
         <strong>{{ company.name }}</strong>
-        <div>{{ company.address | replace(from="\n", to="<br>") | safe }}</div>
+        <div>{{ company.address | replace(from="\n", to="<br />") | safe }}</div>
         {% if company.tax_id %}<div>Tax ID: {{ company.tax_id }}</div>{% endif %}
       </div>
     </section>

@@ -1,8 +1,10 @@
-use crate::cli::Cli;
+use crate::cli::{unique_formats, Cli, OutputFormat};
 use crate::input::collect_yaml_paths;
 use crate::invoice::InvoiceDocument;
+use crate::pdf::html_to_pdf;
 use crate::render::{
-    build_renderer, render_invoice_html, render_output_filename, DEFAULT_FILENAME_TEMPLATE,
+    apply_output_extension, build_renderer, render_invoice_html, render_output_filename,
+    DEFAULT_FILENAME_TEMPLATE,
 };
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
@@ -10,6 +12,7 @@ use std::path::{Path, PathBuf};
 pub fn run(cli: Cli) -> Result<()> {
     let yaml_paths = collect_yaml_paths(&cli.inputs)?;
     let renderer = build_renderer(cli.template.as_deref())?;
+    let formats = unique_formats(&cli.format);
 
     for yaml_path in yaml_paths {
         process_one(
@@ -17,6 +20,7 @@ pub fn run(cli: Cli) -> Result<()> {
             &renderer,
             cli.output_dir.as_deref(),
             cli.output_name.as_deref(),
+            &formats,
         )
         .with_context(|| format!("failed to generate invoice from {}", yaml_path.display()))?;
     }
@@ -29,6 +33,7 @@ fn process_one(
     renderer: &crate::render::Renderer,
     output_dir: Option<&Path>,
     global_filename_template: Option<&str>,
+    formats: &[OutputFormat],
 ) -> Result<()> {
     let doc = InvoiceDocument::from_yaml_file(yaml_path)?;
     let html = render_invoice_html(renderer, &doc)?;
@@ -37,18 +42,35 @@ fn process_one(
         .or(doc.output.filename.as_deref())
         .unwrap_or(DEFAULT_FILENAME_TEMPLATE);
 
-    let filename = render_output_filename(&doc, filename_template)?;
-    let output_path = resolve_output_path(yaml_path, output_dir, &filename);
+    let rendered_name = render_output_filename(&doc, filename_template)?;
 
-    if let Some(parent) = output_path.parent() {
-        std::fs::create_dir_all(parent)
-            .with_context(|| format!("failed to create output directory {}", parent.display()))?;
+    for format in formats {
+        let filename = apply_output_extension(&rendered_name, format.extension());
+        let output_path = resolve_output_path(yaml_path, output_dir, &filename);
+
+        if let Some(parent) = output_path.parent() {
+            std::fs::create_dir_all(parent).with_context(|| {
+                format!("failed to create output directory {}", parent.display())
+            })?;
+        }
+
+        match format {
+            OutputFormat::Html => {
+                std::fs::write(&output_path, &html).with_context(|| {
+                    format!("failed to write HTML file {}", output_path.display())
+                })?;
+            }
+            OutputFormat::Pdf => {
+                let pdf = html_to_pdf(&html)?;
+                std::fs::write(&output_path, pdf).with_context(|| {
+                    format!("failed to write PDF file {}", output_path.display())
+                })?;
+            }
+        }
+
+        println!("Wrote {}", output_path.display());
     }
 
-    std::fs::write(&output_path, html)
-        .with_context(|| format!("failed to write HTML file {}", output_path.display()))?;
-
-    println!("Wrote {}", output_path.display());
     Ok(())
 }
 
@@ -69,6 +91,16 @@ mod tests {
     use std::fs;
     use tempfile::tempdir;
 
+    fn html_cli(inputs: Vec<String>, output_dir: Option<PathBuf>) -> Cli {
+        Cli {
+            template: None,
+            output_dir,
+            output_name: None,
+            format: vec![OutputFormat::Html],
+            inputs,
+        }
+    }
+
     #[test]
     fn end_to_end_single_file() {
         let dir = tempdir().unwrap();
@@ -80,14 +112,11 @@ mod tests {
         .unwrap();
 
         let out_dir = dir.path().join("out");
-        let cli = Cli {
-            template: None,
-            output_dir: Some(out_dir.clone()),
-            output_name: None,
-            inputs: vec![yaml_path.to_string_lossy().to_string()],
-        };
-
-        run(cli).unwrap();
+        run(html_cli(
+            vec![yaml_path.to_string_lossy().to_string()],
+            Some(out_dir.clone()),
+        ))
+        .unwrap();
 
         let expected = out_dir.join("betal-20260115-0042.html");
         assert!(

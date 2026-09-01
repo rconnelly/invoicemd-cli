@@ -1,12 +1,13 @@
 # invoicemd-cli
 
-Generate human-readable HTML invoices from YAML data files using [Tera](https://keats.github.io/tera/) templates.
+Generate human-readable HTML and PDF invoices from YAML data files using [Tera](https://keats.github.io/tera/) templates.
 
 ## Features
 
 - Render one or many invoices from `.yaml` / `.yml` files
 - Accept a single file, a glob pattern, or a directory (recursive)
 - Bundled default HTML invoice template (custom templates supported)
+- HTML and PDF output (`--format html`, `--format pdf`, or both)
 - Validate invoice YAML structure and arithmetic consistency
 - Configurable output filenames via Tera template strings
 - Built-in `--help` usage documentation
@@ -41,14 +42,17 @@ The binary is written to `target/release/invoicemd-cli`.
 # Generate HTML for one invoice using the bundled default template
 cargo run -- examples/acme-invoice.yaml
 
-# Write all example invoices to ./output
-cargo run -- -d output examples/
+# Generate PDF instead
+cargo run -- -f pdf examples/acme-invoice.yaml
 
-# Use a custom HTML template
+# Write HTML and PDF for all example invoices to ./output
+cargo run -- -f html,pdf -d output examples/
+
+# Use a custom HTML template (also used for PDF)
 cargo run -- -t templates/default.html -d output examples/*.yaml
 ```
 
-Each input YAML file produces one HTML file. By default, output is written next to the input file unless `-d/--output-dir` is set.
+Each input YAML file produces one file per requested `--format`. By default, output is written next to the input file unless `-d/--output-dir` is set.
 
 ## CLI usage
 
@@ -60,8 +64,9 @@ Arguments:
 
 Options:
   -t, --template <TEMPLATE>    HTML template file (bundled default when omitted)
-  -d, --output-dir <OUTPUT_DIR>  Directory for generated HTML files
+  -d, --output-dir <OUTPUT_DIR>  Directory for generated files
       --output-name <TEMPLATE>   Global output filename template (overrides YAML and default)
+  -f, --format <FORMAT>          Output format: html, pdf (comma-separate to emit both)
   -h, --help                     Print help
   -V, --version                  Print version
 ```
@@ -169,7 +174,7 @@ Decimals may be written as strings or numbers. Omitted totals are computed autom
 
 ## HTML templates
 
-Templates are [Tera](https://keats.github.io/tera/) HTML files. Pass a custom template with `-t/--template`; otherwise the bundled [`templates/default.html`](templates/default.html) is used.
+Templates are [Tera](https://keats.github.io/tera/) HTML files. Pass a custom template with `-t/--template`; otherwise the bundled [`templates/default.html`](templates/default.html) is used. PDF output is generated from the same rendered HTML.
 
 ### Template context
 
@@ -197,7 +202,7 @@ Tera filters such as `slugify`, `replace`, and `safe` work in custom templates.
 [first 5 alnum chars of company name]-[yyyymmdd]-[zero-padded invoice number].html
 ```
 
-Example: `acmec-20260315-1042.html` for Acme Corporation, invoice #1042, dated 2026-03-15.
+Example: `acmec-20260315-1042.html` for Acme Corporation, invoice #1042, dated 2026-03-15. PDF output uses the same stem with a `.pdf` extension.
 
 **Override priority (highest first):**
 
@@ -212,7 +217,7 @@ output:
   filename: "{{ company.name | slugify }}-inv-{{ invoice.number }}.html"
 ```
 
-Rendered filenames must not contain path separators (`/` or `\`).
+Rendered filenames must not contain path separators (`/` or `\`). The `--format` flag always sets the final extension (`.html` or `.pdf`), even when `output.filename` or `--output-name` includes a different one.
 
 ## Development
 

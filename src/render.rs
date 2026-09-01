@@ -174,6 +174,14 @@ fn sanitize_filename(name: &str) -> Result<String> {
     Ok(trimmed.to_string())
 }
 
+/// Replace or append the filename extension to match the requested output format.
+pub fn apply_output_extension(filename: &str, extension: &str) -> String {
+    std::path::Path::new(filename)
+        .with_extension(extension)
+        .to_string_lossy()
+        .into_owned()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -259,5 +267,18 @@ mod tests {
         )
         .unwrap();
         assert_eq!(filename, "acme-corporation-7.html");
+    }
+
+    #[test]
+    fn apply_output_extension_swaps_html_for_pdf() {
+        assert_eq!(
+            apply_output_extension("acmec-20260315-0007.html", "pdf"),
+            "acmec-20260315-0007.pdf"
+        );
+    }
+
+    #[test]
+    fn apply_output_extension_appends_when_missing() {
+        assert_eq!(apply_output_extension("invoice", "html"), "invoice.html");
     }
 }

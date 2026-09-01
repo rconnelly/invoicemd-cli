@@ -66,7 +66,7 @@ pub struct Totals {
 
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct OutputOptions {
-    /// Tera template string for the output HTML filename.
+    /// Tera template string for the output filename.
     /// Example: `{{ company_slug }}-{{ invoice_date }}-{{ invoice_number }}.html`
     #[serde(default)]
     pub filename: Option<String>,

@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- PDF output via `--format pdf` (HTML-to-PDF using the same Tera template)
+- `--format html,pdf` to emit both HTML and PDF files
 - JSON Schema for invoice YAML files (`schema/invoice.schema.yaml`) for editor and structural validation
+
+### Changed
+
+- Minimum supported Rust version is 1.88 (required by the PDF renderer)
 
 ## [0.1.0] - 2026-09-01
 

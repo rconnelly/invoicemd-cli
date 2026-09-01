@@ -5,7 +5,7 @@ $schema: http://json-schema.org/draft-07/schema#
 $id: https://raw.githubusercontent.com/rconnelly/invoicemd-cli/main/schema/invoice.schema.yaml
 title: invoicemd-cli invoice
 description: >
-  YAML document consumed by invoicemd-cli to render an HTML invoice.
+  YAML document consumed by invoicemd-cli to render an HTML or PDF invoice.
   Decimals may be YAML numbers or decimal strings (e.g. 8 or "8.00").
 type: object
 additionalProperties: false
@@ -40,7 +40,7 @@ properties:
       filename:
         type: string
         minLength: 1
-        description: Tera template for the output HTML filename (no path separators)
+        description: Tera template for the output filename (no path separators; extension follows --format)
         pattern: "^[^/\\\\]+$"
         examples:
           - "{{ company_slug }}-{{ invoice_date }}-{{ invoice_number }}.html"
