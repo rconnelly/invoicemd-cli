@@ -1,0 +1,20 @@
+invoice:
+  number: 3
+  date: 2026-02-01
+  currency: USD
+
+company:
+  name: Beta Labs
+  address: 100 Main St, Boston, MA
+
+client:
+  name: Startup Inc
+  address: 200 Broad St, New York, NY
+
+line_items:
+  - description: Monthly retainer
+    quantity: "1"
+    unit_price: "2500.00"
+
+output:
+  filename: "{{ company.name | slugify }}-inv-{{ invoice.number }}.html"

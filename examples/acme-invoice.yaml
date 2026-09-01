@@ -1,0 +1,37 @@
+invoice:
+  number: 1042
+  date: 2026-03-15
+  due_date: 2026-04-15
+  currency: USD
+  payment_terms: Net 30
+
+company:
+  name: Acme Corporation
+  address: |
+    123 Market Street
+    San Francisco, CA 94105
+  email: billing@acme.example
+  phone: +1 (415) 555-0100
+  tax_id: US-12-3456789
+
+client:
+  name: Example Client LLC
+  address: |
+    456 Pine Avenue
+    Austin, TX 78701
+  email: accounts@example-client.example
+
+line_items:
+  - description: Product design workshop
+    quantity: "8"
+    unit_price: "175.00"
+  - description: Frontend implementation
+    quantity: "24"
+    unit_price: "150.00"
+
+totals:
+  tax_rate: "0.0825"
+
+notes:
+  - Payment due within 30 days.
+  - Thank you for your business.
