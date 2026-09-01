@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default output naming: `[company_slug]-[yyyymmdd]-[invoice_number].html`
 - Regression and unit test suite with YAML fixtures
 - GitHub Actions CI and release workflows
+- Prebuilt binaries for Linux (`x86_64`, `aarch64`) and Windows (`x86_64`)
 
 [Unreleased]: https://github.com/rconnelly/invoicemd-cli/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/rconnelly/invoicemd-cli/releases/tag/v0.1.0
