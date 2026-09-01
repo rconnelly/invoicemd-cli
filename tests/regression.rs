@@ -1,7 +1,7 @@
 //! Regression tests for invoicemd-cli end-to-end behavior and schema validation.
 
 use assert_cmd::Command;
-use invoicemd_cli::cli::Cli;
+use invoicemd_cli::cli::{Cli, OutputFormat};
 use invoicemd_cli::input::collect_yaml_paths;
 use invoicemd_cli::invoice::InvoiceDocument;
 use invoicemd_cli::render::{
@@ -33,6 +33,7 @@ fn regression_examples_acme_invoice_output() {
         template: None,
         output_dir: Some(out.clone()),
         output_name: None,
+        format: vec![OutputFormat::Html],
         inputs: vec![examples_dir()
             .join("acme-invoice.yaml")
             .to_string_lossy()
@@ -65,6 +66,7 @@ fn regression_examples_beta_custom_output_filename() {
         template: None,
         output_dir: Some(out.clone()),
         output_name: None,
+        format: vec![OutputFormat::Html],
         inputs: vec![examples_dir()
             .join("beta-invoice.yaml")
             .to_string_lossy()
@@ -97,6 +99,7 @@ fn regression_directory_input_processes_all_yaml_files() {
         template: None,
         output_dir: Some(out.clone()),
         output_name: None,
+        format: vec![OutputFormat::Html],
         inputs: vec![invoices.to_string_lossy().into_owned()],
     })
     .unwrap();
@@ -123,6 +126,7 @@ fn regression_glob_input_processes_matching_files() {
         template: None,
         output_dir: Some(out.clone()),
         output_name: None,
+        format: vec![OutputFormat::Html],
         inputs: vec![pattern],
     })
     .unwrap();
@@ -142,6 +146,7 @@ fn regression_global_output_name_overrides_yaml_setting() {
         template: None,
         output_dir: Some(out.clone()),
         output_name: Some("global-{{ invoice.number }}.html".into()),
+        format: vec![OutputFormat::Html],
         inputs: vec![yaml.to_string_lossy().into_owned()],
     })
     .unwrap();
@@ -161,6 +166,7 @@ fn regression_yaml_output_filename_template() {
         template: None,
         output_dir: Some(out.clone()),
         output_name: None,
+        format: vec![OutputFormat::Html],
         inputs: vec![yaml.to_string_lossy().into_owned()],
     })
     .unwrap();
@@ -186,6 +192,7 @@ fn regression_custom_html_template() {
         template: Some(template),
         output_dir: Some(out.clone()),
         output_name: None,
+        format: vec![OutputFormat::Html],
         inputs: vec![yaml.to_string_lossy().into_owned()],
     })
     .unwrap();
@@ -247,6 +254,7 @@ fn regression_empty_directory_input_fails() {
         template: None,
         output_dir: None,
         output_name: None,
+        format: vec![OutputFormat::Html],
         inputs: vec![empty.to_string_lossy().into_owned()],
     })
     .unwrap_err();
@@ -291,7 +299,8 @@ fn regression_cli_help_shows_usage() {
         .success()
         .stdout(predicate::str::contains("invoice YAML files"))
         .stdout(predicate::str::contains("--template"))
-        .stdout(predicate::str::contains("--output-name"));
+        .stdout(predicate::str::contains("--output-name"))
+        .stdout(predicate::str::contains("--format"));
 }
 
 #[test]
@@ -324,6 +333,7 @@ fn regression_output_written_next_to_yaml_without_output_dir() {
         template: None,
         output_dir: None,
         output_name: None,
+        format: vec![OutputFormat::Html],
         inputs: vec![yaml.to_string_lossy().into_owned()],
     })
     .unwrap();
@@ -346,6 +356,7 @@ fn regression_computed_tax_appears_in_rendered_html() {
         template: None,
         output_dir: Some(out.clone()),
         output_name: None,
+        format: vec![OutputFormat::Html],
         inputs: vec![yaml.to_string_lossy().into_owned()],
     })
     .unwrap();
@@ -354,4 +365,97 @@ fn regression_computed_tax_appears_in_rendered_html() {
     assert!(html.contains("USD 450.00"), "expected subtotal in HTML");
     assert!(html.contains("USD 37.125000"), "expected tax in HTML");
     assert!(html.contains("USD 487.125000"), "expected total in HTML");
+}
+
+fn assert_pdf_magic(path: &Path) {
+    let bytes = fs::read(path).unwrap();
+    assert!(
+        bytes.starts_with(b"%PDF"),
+        "expected PDF header in {} ({} bytes)",
+        path.display(),
+        bytes.len()
+    );
+    assert!(bytes.len() > 100, "expected a non-trivial PDF");
+}
+
+#[test]
+fn regression_pdf_format_writes_pdf_not_html() {
+    let dir = tempdir().unwrap();
+    let yaml = dir.path().join("invoice.yaml");
+    fs::copy(fixture("valid/minimal.yaml"), &yaml).unwrap();
+
+    let out = dir.path().join("out");
+    run(Cli {
+        template: None,
+        output_dir: Some(out.clone()),
+        output_name: None,
+        format: vec![OutputFormat::Pdf],
+        inputs: vec![yaml.to_string_lossy().into_owned()],
+    })
+    .unwrap();
+
+    let pdf_path = out.join("betal-20260115-0042.pdf");
+    assert!(pdf_path.is_file(), "missing {}", pdf_path.display());
+    assert_pdf_magic(&pdf_path);
+    assert!(!out.join("betal-20260115-0042.html").exists());
+}
+
+#[test]
+fn regression_html_and_pdf_formats_write_both() {
+    let dir = tempdir().unwrap();
+    let yaml = dir.path().join("invoice.yaml");
+    fs::copy(fixture("valid/minimal.yaml"), &yaml).unwrap();
+
+    let out = dir.path().join("out");
+    run(Cli {
+        template: None,
+        output_dir: Some(out.clone()),
+        output_name: None,
+        format: vec![OutputFormat::Html, OutputFormat::Pdf],
+        inputs: vec![yaml.to_string_lossy().into_owned()],
+    })
+    .unwrap();
+
+    assert!(out.join("betal-20260115-0042.html").is_file());
+    assert_pdf_magic(&out.join("betal-20260115-0042.pdf"));
+}
+
+#[test]
+fn regression_pdf_uses_yaml_filename_with_pdf_extension() {
+    let dir = tempdir().unwrap();
+    let yaml = dir.path().join("invoice.yaml");
+    fs::copy(fixture("valid/custom-output.yaml"), &yaml).unwrap();
+
+    let out = dir.path().join("out");
+    run(Cli {
+        template: None,
+        output_dir: Some(out.clone()),
+        output_name: None,
+        format: vec![OutputFormat::Pdf],
+        inputs: vec![yaml.to_string_lossy().into_owned()],
+    })
+    .unwrap();
+
+    assert_pdf_magic(&out.join("custo-custom-12.pdf"));
+    assert!(!out.join("custo-custom-12.html").exists());
+}
+
+#[test]
+fn regression_examples_acme_invoice_pdf_output() {
+    let dir = tempdir().unwrap();
+    let out = dir.path().join("out");
+
+    run(Cli {
+        template: None,
+        output_dir: Some(out.clone()),
+        output_name: None,
+        format: vec![OutputFormat::Pdf],
+        inputs: vec![examples_dir()
+            .join("acme-invoice.yaml")
+            .to_string_lossy()
+            .into_owned()],
+    })
+    .expect("acme example should render to PDF");
+
+    assert_pdf_magic(&out.join("acmec-20260315-1042.pdf"));
 }
