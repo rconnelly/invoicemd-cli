@@ -235,4 +235,29 @@ mod tests {
         assert!(html.contains("Acme Corporation"));
         assert!(html.contains("Invoice #7"));
     }
+
+    #[test]
+    fn rejects_empty_rendered_filename() {
+        let doc = sample_doc();
+        let err = render_output_filename(&doc, "   ").unwrap_err();
+        assert!(format!("{err:#}").contains("empty"));
+    }
+
+    #[test]
+    fn rejects_filename_with_path_separator() {
+        let doc = sample_doc();
+        let err = render_output_filename(&doc, "{{ company_slug }}/out.html").unwrap_err();
+        assert!(format!("{err:#}").contains("path separators"));
+    }
+
+    #[test]
+    fn custom_filename_template_can_use_company_name_filter() {
+        let doc = sample_doc();
+        let filename = render_output_filename(
+            &doc,
+            "{{ company.name | slugify }}-{{ invoice.number }}.html",
+        )
+        .unwrap();
+        assert_eq!(filename, "acme-corporation-7.html");
+    }
 }

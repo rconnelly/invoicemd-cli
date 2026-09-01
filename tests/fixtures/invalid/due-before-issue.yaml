@@ -1,0 +1,14 @@
+invoice:
+  number: 2
+  date: 2026-02-01
+  due_date: 2026-01-01
+company:
+  name: Acme
+  address: 1 Main
+client:
+  name: Client
+  address: 2 Main
+line_items:
+  - description: Item
+    quantity: "1"
+    unit_price: "10.00"

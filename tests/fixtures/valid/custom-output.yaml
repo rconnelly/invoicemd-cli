@@ -1,0 +1,16 @@
+invoice:
+  number: 12
+  date: 2026-07-04
+  currency: USD
+company:
+  name: Custom Output Inc
+  address: 9 Template Way
+client:
+  name: Client
+  address: 8 Output Rd
+line_items:
+  - description: Service
+    quantity: "1"
+    unit_price: "100.00"
+output:
+  filename: "{{ company_slug }}-custom-{{ invoice.number }}.html"

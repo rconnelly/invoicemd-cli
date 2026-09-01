@@ -101,10 +101,25 @@ mod tests {
     fn collects_yaml_from_directory() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("a.yaml"), "invoice: {}\n").unwrap();
+        fs::write(dir.path().join("b.yml"), "invoice: {}\n").unwrap();
         fs::write(dir.path().join("ignore.txt"), "nope").unwrap();
 
         let paths = yaml_files_in_dir(dir.path()).unwrap();
+        assert_eq!(paths.len(), 2);
+    }
+
+    #[test]
+    fn collect_yaml_paths_sorts_and_deduplicates() {
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("a.yaml"), "x: 1\n").unwrap();
+        let a = dir.path().join("a.yaml").to_string_lossy().into_owned();
+        let paths = collect_yaml_paths(&[a.clone(), a]).unwrap();
         assert_eq!(paths.len(), 1);
-        assert!(paths[0].ends_with("a.yaml"));
+    }
+
+    #[test]
+    fn rejects_missing_input_path() {
+        let err = collect_yaml_paths(&["/no/such/file-or-dir.yaml".into()]).unwrap_err();
+        assert!(format!("{err:#}").contains("not a file, directory, or glob pattern"));
     }
 }
