@@ -1,0 +1,31 @@
+# invoicemd-cli
+
+A Rust CLI that creates invoices from markdown file data. Supports an HTML layout. Also manages invoice storage for git support.
+
+## Cursor Cloud specific instructions
+
+### Project state
+
+Rust CLI (`invoicemd-cli`) that renders HTML invoices from YAML via Tera. Entry point: `src/main.rs`. Bundled template: `templates/default.html`. Sample data: `examples/`.
+
+### Toolchain
+
+The Rust toolchain is preinstalled in the base image. Use `rustup default stable` if `rustc` is older than 1.85 (required by `tera` 1.20 and recent dependencies). Verified with `rustc`/`cargo` 1.98.0.
+
+Tools on `PATH`: `rustc`, `cargo`, `rustfmt`, `clippy` at `/usr/local/cargo/bin`.
+
+### Standard commands
+
+- Build (dev): `cargo build`
+- Run the CLI: `cargo run -- [OPTIONS] <INPUT>...` (see `cargo run -- --help`)
+- Test: `cargo test`
+- Lint: `cargo clippy -- -D warnings`
+- Format check: `cargo fmt --check` (apply with `cargo fmt`)
+
+Example end-to-end:
+
+```bash
+cargo run -- -d /tmp/out examples/
+```
+
+This is a local one-shot CLI — no long-running services, servers, databases, or ports.
