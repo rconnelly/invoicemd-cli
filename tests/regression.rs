@@ -301,7 +301,8 @@ fn regression_cli_version_succeeds() {
         .arg("--version")
         .assert()
         .success()
-        .stdout(predicate::str::contains("invoicemd-cli"));
+        .stdout(predicate::str::contains("invoicemd-cli"))
+        .stdout(predicate::str::contains(invoicemd_cli::version::VERSION));
 }
 
 #[test]

@@ -3,7 +3,14 @@ name = "invoicemd-cli"
 version = "0.1.0"
 edition = "2021"
 description = "Generate HTML invoices from YAML using Tera templates"
+readme = "README.md"
 license = "MIT"
+repository = "https://github.com/rconnelly/invoicemd-cli"
+homepage = "https://github.com/rconnelly/invoicemd-cli"
+keywords = ["invoice", "yaml", "html", "cli", "tera"]
+categories = ["command-line-utilities"]
+rust-version = "1.85"
+build = "build.rs"
 
 [dependencies]
 anyhow = "1.0"
