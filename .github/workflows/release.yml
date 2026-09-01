@@ -73,7 +73,7 @@ jobs:
           - runner: macos-latest
             target: aarch64-apple-darwin
             archive: tar.gz
-          - runner: macos-13
+          - runner: macos-15-intel
             target: x86_64-apple-darwin
             archive: tar.gz
           - runner: windows-latest

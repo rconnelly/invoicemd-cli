@@ -1,6 +1,6 @@
 [package]
 name = "invoicemd-cli"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Generate HTML and PDF invoices from YAML using Tera templates"
 readme = "README.md"

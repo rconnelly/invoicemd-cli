@@ -23,9 +23,9 @@ example YAML files.
 
 ```bash
 # Example: Linux x86_64
-curl -LO https://github.com/rconnelly/invoicemd-cli/releases/download/v0.1.0/invoicemd-cli-0.1.0-x86_64-unknown-linux-gnu.tar.gz
-tar -xzf invoicemd-cli-0.1.0-x86_64-unknown-linux-gnu.tar.gz
-./invoicemd-cli-0.1.0-x86_64-unknown-linux-gnu/invoicemd-cli --version
+curl -LO https://github.com/rconnelly/invoicemd-cli/releases/download/v0.2.0/invoicemd-cli-0.2.0-x86_64-unknown-linux-gnu.tar.gz
+tar -xzf invoicemd-cli-0.2.0-x86_64-unknown-linux-gnu.tar.gz
+./invoicemd-cli-0.2.0-x86_64-unknown-linux-gnu/invoicemd-cli --version
 ```
 
 ### From source
