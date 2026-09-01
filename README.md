@@ -82,7 +82,19 @@ cargo run -- --help
 
 ## Invoice YAML schema
 
-Each invoice file is a single YAML document with the following structure.
+Each invoice file is a single YAML document. A machine-readable JSON Schema lives at
+[`schema/invoice.schema.yaml`](schema/invoice.schema.yaml) and can be used by editors
+and validators:
+
+```yaml
+# yaml-language-server: $schema=../schema/invoice.schema.yaml
+```
+
+The schema checks structure, types, required fields, unknown keys, non-empty names,
+`quantity > 0`, and `unit_price >= 0`. Arithmetic consistency (`line_items[].amount`,
+`totals.*`, and `due_date` vs `date`) is enforced by `invoicemd-cli` when rendering.
+
+### Required fields
 
 ### Required fields
 
@@ -214,6 +226,7 @@ cargo fmt --check
 
 - **Unit tests** live alongside modules in `src/` (validation, rendering, input resolution).
 - **Regression tests** in `tests/regression.rs` cover CLI behavior, example invoices, directory/glob input, output naming, and invalid YAML fixtures under `tests/fixtures/`.
+- **Schema tests** in `tests/schema.rs` check example and fixture YAML against [`schema/invoice.schema.yaml`](schema/invoice.schema.yaml).
 
 ## Versioning and releases
 

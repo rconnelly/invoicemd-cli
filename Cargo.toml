@@ -26,5 +26,6 @@ walkdir = "2.5"
 
 [dev-dependencies]
 assert_cmd = "2.0"
+jsonschema = { version = "0.52.1", default-features = false }
 predicates = "3.1"
 tempfile = "3.14"

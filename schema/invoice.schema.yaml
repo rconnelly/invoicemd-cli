@@ -1,0 +1,159 @@
+# JSON Schema for invoicemd-cli invoice YAML files.
+# Editors: add `# yaml-language-server: $schema=<path-to-this-file>` at the top of an invoice.
+# Arithmetic checks (line amounts, totals, due_date vs date) are enforced by invoicemd-cli, not this schema.
+$schema: http://json-schema.org/draft-07/schema#
+$id: https://raw.githubusercontent.com/rconnelly/invoicemd-cli/main/schema/invoice.schema.yaml
+title: invoicemd-cli invoice
+description: >
+  YAML document consumed by invoicemd-cli to render an HTML invoice.
+  Decimals may be YAML numbers or decimal strings (e.g. 8 or "8.00").
+type: object
+additionalProperties: false
+required:
+  - invoice
+  - company
+  - client
+  - line_items
+properties:
+  invoice:
+    $ref: "#/definitions/invoiceMeta"
+  company:
+    $ref: "#/definitions/party"
+  client:
+    $ref: "#/definitions/party"
+  line_items:
+    type: array
+    minItems: 1
+    items:
+      $ref: "#/definitions/lineItem"
+  totals:
+    $ref: "#/definitions/totals"
+  notes:
+    type: array
+    description: Footer notes rendered on the invoice
+    items:
+      type: string
+  output:
+    type: object
+    additionalProperties: false
+    properties:
+      filename:
+        type: string
+        minLength: 1
+        description: Tera template for the output HTML filename (no path separators)
+        pattern: "^[^/\\\\]+$"
+        examples:
+          - "{{ company_slug }}-{{ invoice_date }}-{{ invoice_number }}.html"
+definitions:
+  nonEmptyString:
+    type: string
+    minLength: 1
+    pattern: ".*\\S.*"
+  isoDate:
+    type: string
+    description: Calendar date in YYYY-MM-DD
+    format: date
+    pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    examples:
+      - "2026-03-15"
+  nonNegativeDecimal:
+    description: Decimal greater than or equal to zero, as a number or string
+    oneOf:
+      - type: number
+        minimum: 0
+      - type: string
+        pattern: "^(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$"
+  positiveDecimal:
+    description: Decimal greater than zero, as a number or string
+    oneOf:
+      - type: number
+        exclusiveMinimum: 0
+      - type: string
+        pattern: "^(?:0\\.[0-9]*[1-9][0-9]*|[1-9][0-9]*(?:\\.[0-9]+)?)$"
+  invoiceMeta:
+    type: object
+    additionalProperties: false
+    required:
+      - number
+      - date
+    properties:
+      number:
+        type: integer
+        minimum: 0
+        description: Invoice number (used in the default output filename)
+      date:
+        $ref: "#/definitions/isoDate"
+        description: Invoice issue date
+      due_date:
+        $ref: "#/definitions/isoDate"
+        description: Payment due date; must be on or after invoice.date (enforced by the CLI)
+      currency:
+        type: string
+        minLength: 1
+        description: Currency code (CLI default is USD when omitted)
+        examples:
+          - USD
+          - EUR
+      payment_terms:
+        type: string
+        minLength: 1
+        examples:
+          - Net 30
+  party:
+    type: object
+    additionalProperties: false
+    required:
+      - name
+      - address
+    properties:
+      name:
+        $ref: "#/definitions/nonEmptyString"
+      address:
+        $ref: "#/definitions/nonEmptyString"
+        description: Street address; YAML block scalars are allowed
+      email:
+        type: string
+        minLength: 1
+        format: email
+      phone:
+        type: string
+        minLength: 1
+      tax_id:
+        type: string
+        minLength: 1
+        description: Tax / VAT ID
+  lineItem:
+    type: object
+    additionalProperties: false
+    required:
+      - description
+      - quantity
+      - unit_price
+    properties:
+      description:
+        $ref: "#/definitions/nonEmptyString"
+      quantity:
+        $ref: "#/definitions/positiveDecimal"
+      unit_price:
+        $ref: "#/definitions/nonNegativeDecimal"
+      amount:
+        $ref: "#/definitions/nonNegativeDecimal"
+        description: If set, must equal quantity * unit_price (enforced by the CLI)
+  totals:
+    type: object
+    additionalProperties: false
+    properties:
+      subtotal:
+        $ref: "#/definitions/nonNegativeDecimal"
+        description: If set, must match the sum of line items (enforced by the CLI)
+      tax_rate:
+        $ref: "#/definitions/nonNegativeDecimal"
+        description: Tax rate applied to subtotal (e.g. 0.0825 for 8.25%)
+        examples:
+          - "0.0825"
+      tax:
+        $ref: "#/definitions/nonNegativeDecimal"
+        description: If set, must match computed tax (enforced by the CLI)
+      total:
+        $ref: "#/definitions/nonNegativeDecimal"
+        description: If set, must match subtotal + tax (enforced by the CLI)
