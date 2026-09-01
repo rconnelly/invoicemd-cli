@@ -194,6 +194,11 @@ cargo clippy -- -D warnings
 cargo fmt --check
 ```
 
+### Tests
+
+- **Unit tests** live alongside modules in `src/` (validation, rendering, input resolution).
+- **Regression tests** in `tests/regression.rs` cover CLI behavior, example invoices, directory/glob input, output naming, and invalid YAML fixtures under `tests/fixtures/`.
+
 ## License
 
 MIT

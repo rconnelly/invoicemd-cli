@@ -1,0 +1,28 @@
+invoice:
+  number: 9
+  date: 2026-05-01
+  due_date: 2026-06-01
+  currency: EUR
+  payment_terms: Net 30
+company:
+  name: "123 Numeric Co"
+  address: 1 Number Lane
+  email: hello@123.example
+client:
+  name: Buyer AG
+  address: Berlin, DE
+line_items:
+  - description: Widget A
+    quantity: "2"
+    unit_price: "50.00"
+  - description: Widget B
+    quantity: "1"
+    unit_price: "25.00"
+    amount: "25.00"
+totals:
+  subtotal: "125.00"
+  tax_rate: "0.19"
+  tax: "23.75"
+  total: "148.75"
+notes:
+  - VAT included.

@@ -1,0 +1,20 @@
+invoice:
+  number: 42
+  date: 2026-01-15
+  currency: USD
+company:
+  name: Beta Labs LLC
+  address: |
+    100 Market Street
+    San Francisco, CA
+client:
+  name: Example Client
+  address: 200 Pine Street
+line_items:
+  - description: Design review
+    quantity: 3
+    unit_price: "150.00"
+totals:
+  tax_rate: "0.0825"
+notes:
+  - Thank you for your business.

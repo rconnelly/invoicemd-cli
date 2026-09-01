@@ -257,6 +257,60 @@ mod tests {
     fn rejects_empty_line_items() {
         let mut doc = sample_doc();
         doc.line_items.clear();
-        assert!(doc.validate().is_err());
+        let err = doc.validate().unwrap_err();
+        assert!(format!("{err:#}").contains("line_items"));
+    }
+
+    #[test]
+    fn rejects_blank_company_name() {
+        let mut doc = sample_doc();
+        doc.company.name = "   ".into();
+        let err = doc.validate().unwrap_err();
+        assert!(format!("{err:#}").contains("company.name"));
+    }
+
+    #[test]
+    fn rejects_due_date_before_issue_date() {
+        let mut doc = sample_doc();
+        doc.invoice.due_date = Some(NaiveDate::from_ymd_opt(2026, 3, 14).unwrap());
+        let err = doc.validate().unwrap_err();
+        assert!(format!("{err:#}").contains("due_date"));
+    }
+
+    #[test]
+    fn rejects_mismatched_line_item_amount() {
+        let mut doc = sample_doc();
+        doc.line_items[0].amount = Some(dec("999"));
+        let err = doc.validate().unwrap_err();
+        assert!(format!("{err:#}").contains("line_items[0].amount"));
+    }
+
+    #[test]
+    fn rejects_zero_quantity() {
+        let mut doc = sample_doc();
+        doc.line_items[0].quantity = dec("0");
+        let err = doc.validate().unwrap_err();
+        assert!(format!("{err:#}").contains("quantity"));
+    }
+
+    #[test]
+    fn computed_subtotal_sums_line_items() {
+        let doc = sample_doc();
+        assert_eq!(doc.computed_subtotal(), dec("200"));
+    }
+
+    #[test]
+    fn computed_tax_applies_rate_when_tax_not_declared() {
+        let mut doc = sample_doc();
+        doc.totals.tax_rate = Some(dec("0.10"));
+        let subtotal = doc.computed_subtotal();
+        assert_eq!(doc.computed_tax(subtotal), dec("20"));
+    }
+
+    #[test]
+    fn padded_invoice_number_zero_fills_to_four_digits() {
+        let doc = sample_doc();
+        assert_eq!(doc.padded_invoice_number(4), "0007");
+        assert_eq!(doc.invoice_date_compact(), "20260315");
     }
 }
