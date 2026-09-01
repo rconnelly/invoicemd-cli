@@ -6,18 +6,26 @@ A Rust CLI that creates invoices from markdown file data. Supports an HTML layou
 
 ### Project state
 
-This is a greenfield Rust CLI project. At the time of environment setup the repository contained only `README.md` — there is no `Cargo.toml`, `src/`, or other Rust code yet. Once the project is scaffolded (e.g. via `cargo init`/`cargo new`), the standard Cargo workflow below applies.
+Rust CLI (`invoicemd-cli`) that renders HTML invoices from YAML via Tera. Entry point: `src/main.rs`. Bundled template: `templates/default.html`. Sample data: `examples/`.
 
 ### Toolchain
 
-The Rust toolchain is preinstalled in the base image (no install step needed): `rustc`, `cargo`, `rustfmt`, and `clippy` are all available on `PATH` at `/usr/local/cargo/bin`. Verified working with `rustc`/`cargo` 1.83.0.
+The Rust toolchain is preinstalled in the base image. Use `rustup default stable` if `rustc` is older than 1.85 (required by `tera` 1.20 and recent dependencies). Verified with `rustc`/`cargo` 1.98.0.
 
-### Standard commands (once `Cargo.toml` exists)
+Tools on `PATH`: `rustc`, `cargo`, `rustfmt`, `clippy` at `/usr/local/cargo/bin`.
+
+### Standard commands
 
 - Build (dev): `cargo build`
-- Run the CLI: `cargo run -- <args>`
+- Run the CLI: `cargo run -- [OPTIONS] <INPUT>...` (see `cargo run -- --help`)
 - Test: `cargo test`
 - Lint: `cargo clippy -- -D warnings`
 - Format check: `cargo fmt --check` (apply with `cargo fmt`)
 
-This is a local one-shot CLI — there are no long-running services, servers, databases, or ports to start.
+Example end-to-end:
+
+```bash
+cargo run -- -d /tmp/out examples/
+```
+
+This is a local one-shot CLI — no long-running services, servers, databases, or ports.
