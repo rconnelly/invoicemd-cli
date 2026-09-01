@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_call:
+    inputs:
+      tag:
+        description: Git tag to build and attach, for example v0.3.0
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -16,36 +22,46 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.vars.outputs.version }}
+      tag: ${{ steps.tag.outputs.tag }}
+      version: ${{ steps.tag.outputs.version }}
       changelog: ${{ steps.changelog.outputs.body }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Resolve release version from tag
-        id: vars
+      - name: Resolve release tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
-          TAG="${GITHUB_REF_NAME}"
+          TAG="${INPUT_TAG:-${GITHUB_REF_NAME}}"
           if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Tag must look like v0.1.0, got: $TAG" >&2
             exit 1
           fi
-          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.tag.outputs.tag }}
+
+      - name: Resolve crate version
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
           CRATE_VERSION="$(grep '^version = ' Cargo.toml | head -n1 | sed 's/version = "\(.*\)"/\1/')"
           if [[ "$VERSION" != "$CRATE_VERSION" ]]; then
             echo "Tag version ($VERSION) does not match Cargo.toml ($CRATE_VERSION)" >&2
             exit 1
           fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Extract changelog section
         id: changelog
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
         run: |
-          VERSION="${{ steps.vars.outputs.version }}"
           BODY="$(awk -v version="$VERSION" '
-            $0 ~ "^## \\[" version "\\]" { capture=1; next }
-            capture && (/^## \[/ || /^\[.*\]: http/) { exit }
+            $0 ~ "^#+ \\[" version "\\]" { capture=1; next }
+            capture && (/^#+ \[/ || /^\[.*\]: http/) { exit }
             capture { print }
           ' CHANGELOG.md)"
           if [[ -z "$BODY" ]]; then
@@ -82,6 +98,8 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.tag }}
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -137,6 +155,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.tag }}
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -144,11 +164,11 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Create GitHub Release
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: v${{ needs.validate.outputs.version }}
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ needs.validate.outputs.tag }}
           body: ${{ needs.validate.outputs.changelog }}
           files: dist/*
           generate_release_notes: false

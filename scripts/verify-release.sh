@@ -23,8 +23,8 @@ if [[ "$VERSION" != "$CRATE_VERSION" ]]; then
 fi
 
 BODY="$(awk -v version="$VERSION" '
-  $0 ~ "^## \\[" version "\\]" { capture=1; next }
-  capture && (/^## \[/ || /^\[.*\]: http/) { exit }
+  $0 ~ "^#+ \\[" version "\\]" { capture=1; next }
+  capture && (/^#+ \[/ || /^\[.*\]: http/) { exit }
   capture { print }
 ' CHANGELOG.md)"
 
