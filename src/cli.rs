@@ -1,3 +1,4 @@
+use crate::version;
 use clap::{Parser, ValueHint};
 use std::path::PathBuf;
 
@@ -5,7 +6,8 @@ use std::path::PathBuf;
 #[derive(Parser, Debug)]
 #[command(
     name = "invoicemd-cli",
-    version,
+    version = version::VERSION,
+    long_version = version::LONG_VERSION,
     about = "Generate HTML invoices from YAML using Tera templates",
     long_about = "invoicemd-cli reads one or more invoice YAML files and renders each one \
 to a standalone HTML file using a Tera HTML template.\n\n\

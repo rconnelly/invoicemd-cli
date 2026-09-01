@@ -1,0 +1,154 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  BIN_NAME: invoicemd-cli
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.vars.outputs.version }}
+      changelog: ${{ steps.changelog.outputs.body }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release version from tag
+        id: vars
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag must look like v0.1.0, got: $TAG" >&2
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          CRATE_VERSION="$(grep '^version = ' Cargo.toml | head -n1 | sed 's/version = "\(.*\)"/\1/')"
+          if [[ "$VERSION" != "$CRATE_VERSION" ]]; then
+            echo "Tag version ($VERSION) does not match Cargo.toml ($CRATE_VERSION)" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Extract changelog section
+        id: changelog
+        run: |
+          VERSION="${{ steps.vars.outputs.version }}"
+          BODY="$(awk -v version="$VERSION" '
+            $0 ~ "^## \\[" version "\\]" { capture=1; next }
+            capture && (/^## \[/ || /^\[.*\]: http/) { exit }
+            capture { print }
+          ' CHANGELOG.md)"
+          if [[ -z "$BODY" ]]; then
+            echo "No CHANGELOG section found for version $VERSION" >&2
+            exit 1
+          fi
+          {
+            echo "body<<EOF"
+            echo "$BODY"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            archive: tar.gz
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            archive: tar.gz
+          - runner: macos-latest
+            target: aarch64-apple-darwin
+            archive: tar.gz
+          - runner: macos-13
+            target: x86_64-apple-darwin
+            archive: tar.gz
+          - runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive: zip
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+        env:
+          BUILD_GIT_SHA: ${{ github.sha }}
+
+      - name: Package Linux/macOS artifact
+        if: matrix.archive == 'tar.gz'
+        shell: bash
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          TARGET="${{ matrix.target }}"
+          STAGING="dist/${{ env.BIN_NAME }}-${VERSION}-${TARGET}"
+          mkdir -p "$STAGING"
+          install "target/${TARGET}/release/${{ env.BIN_NAME }}" "$STAGING/"
+          install README.md CHANGELOG.md "$STAGING/"
+          mkdir -p "$STAGING/templates" "$STAGING/examples"
+          cp templates/default.html "$STAGING/templates/"
+          cp examples/*.yaml "$STAGING/examples/"
+          tar -czf "dist/${{ env.BIN_NAME }}-${VERSION}-${TARGET}.tar.gz" -C dist "${{ env.BIN_NAME }}-${VERSION}-${TARGET}"
+
+      - name: Package Windows artifact
+        if: matrix.archive == 'zip'
+        shell: pwsh
+        run: |
+          $Version = "${{ needs.validate.outputs.version }}"
+          $Target = "${{ matrix.target }}"
+          $Staging = "dist/${{ env.BIN_NAME }}-${Version}-${Target}"
+          New-Item -ItemType Directory -Force -Path $Staging | Out-Null
+          Copy-Item "target/${Target}/release/${{ env.BIN_NAME }}.exe" $Staging
+          Copy-Item README.md, CHANGELOG.md $Staging
+          New-Item -ItemType Directory -Force -Path "$Staging/templates", "$Staging/examples" | Out-Null
+          Copy-Item templates/default.html "$Staging/templates/"
+          Copy-Item examples/*.yaml "$Staging/examples/"
+          Compress-Archive -Path $Staging -DestinationPath "dist/${{ env.BIN_NAME }}-${Version}-${Target}.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BIN_NAME }}-${{ needs.validate.outputs.version }}-${{ matrix.target }}
+          path: dist/${{ env.BIN_NAME }}-${{ needs.validate.outputs.version }}-${{ matrix.target }}.*
+
+  release:
+    needs: [validate, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ needs.validate.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          body: ${{ needs.validate.outputs.changelog }}
+          files: dist/*
+          generate_release_notes: false

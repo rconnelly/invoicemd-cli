@@ -20,7 +20,8 @@ Tools on `PATH`: `rustc`, `cargo`, `rustfmt`, `clippy` at `/usr/local/cargo/bin`
 - Run the CLI: `cargo run -- [OPTIONS] <INPUT>...` (see `cargo run -- --help`)
 - Test: `cargo test`
 - Lint: `cargo clippy -- -D warnings`
-- Format check: `cargo fmt --check` (apply with `cargo fmt`)
+- Format check: `cargo fmt --check`
+- Release process: see `RELEASING.md` at repo root (tag `vX.Y.Z` triggers `.github/workflows/release.yml`)
 
 Example end-to-end:
 

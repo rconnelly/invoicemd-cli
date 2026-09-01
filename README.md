@@ -13,6 +13,22 @@ Generate human-readable HTML invoices from YAML data files using [Tera](https://
 
 ## Installation
 
+### From GitHub Releases
+
+Download a prebuilt archive for your platform from
+[GitHub Releases](https://github.com/rconnelly/invoicemd-cli/releases).
+Each archive includes the `invoicemd-cli` binary, the default template, and
+example YAML files.
+
+```bash
+# Example: Linux x86_64
+curl -LO https://github.com/rconnelly/invoicemd-cli/releases/download/v0.1.0/invoicemd-cli-0.1.0-x86_64-unknown-linux-gnu.tar.gz
+tar -xzf invoicemd-cli-0.1.0-x86_64-unknown-linux-gnu.tar.gz
+./invoicemd-cli-0.1.0-x86_64-unknown-linux-gnu/invoicemd-cli --version
+```
+
+### From source
+
 ```bash
 cargo build --release
 ```
@@ -198,6 +214,12 @@ cargo fmt --check
 
 - **Unit tests** live alongside modules in `src/` (validation, rendering, input resolution).
 - **Regression tests** in `tests/regression.rs` cover CLI behavior, example invoices, directory/glob input, output naming, and invalid YAML fixtures under `tests/fixtures/`.
+
+## Versioning and releases
+
+Version numbers follow [Semantic Versioning](https://semver.org/). The canonical version is set in `Cargo.toml`; release notes live in [`CHANGELOG.md`](CHANGELOG.md).
+
+To cut a release, follow [`RELEASING.md`](RELEASING.md): bump the version, update the changelog, tag `vX.Y.Z`, and push. GitHub Actions builds release binaries and publishes a GitHub Release automatically.
 
 ## License
 
