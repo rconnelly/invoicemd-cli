@@ -24,7 +24,7 @@ fi
 
 BODY="$(awk -v version="$VERSION" '
   $0 ~ "^## \\[" version "\\]" { capture=1; next }
-  capture && (/^## \[/ || /^\[[^]]+\]:/) { exit }
+  capture && (/^## \[/ || /^\[.*\]: http/) { exit }
   capture { print }
 ' CHANGELOG.md)"
 
